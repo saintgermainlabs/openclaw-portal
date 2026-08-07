@@ -1,0 +1,8 @@
+{
+  "title": "OpenClaw Portal",
+  "description": "Chat with OpenClaw. Generators and connected apps render in the result pane.",
+  "language": "en",
+  "robots": {
+    "index": false
+  }
+}

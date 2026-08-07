@@ -1,0 +1,67 @@
+# OpenClaw Portal — private Tailnet HTTPS + Vite HMR
+# Hostname: openclaw-portal → https://openclaw-portal.tiger-bushmaster.ts.net
+#
+# Sidecar image auto-generates Serve from APP_PORT → http://127.0.0.1:5173
+# (Vite proxies /api → :8787 in the shared network namespace).
+# Coolify: map TS_AUTHKEY={{project.TS_AUTHKEY}} at the resource level.
+
+services:
+  tailscale:
+    image: ghcr.io/saintgermainlabs/tailscale-app-sidecar:latest
+    hostname: openclaw-portal
+    labels:
+      app.name: openclaw-portal
+      app.component: tailscale-sidecar
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:?}
+      TS_HOSTNAME: openclaw-portal
+      TS_AUTH_ONCE: "true"
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "false"
+      TS_EXTRA_ARGS: --advertise-tags=tag:container --accept-dns=true
+      # entrypoint writes Serve JSON: HTTPS :443 → http://127.0.0.1:${APP_PORT}
+      APP_PORT: "5173"
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    restart: unless-stopped
+
+  openclaw-portal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    labels:
+      app.name: openclaw-portal
+      app.component: application
+    network_mode: service:tailscale
+    depends_on:
+      - tailscale
+    environment:
+      NODE_ENV: development
+      PORT: "5173"
+      API_PORT: "8787"
+      VITE_HMR_PROTOCOL: wss
+      VITE_HMR_CLIENT_PORT: "443"
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+      OPENCLAW_GATEWAY_URL: ${OPENCLAW_GATEWAY_URL:-wss://openclaw.tiger-bushmaster.ts.net}
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      OPENCLAW_HTTP_URL: ${OPENCLAW_HTTP_URL:-https://openclaw.tiger-bushmaster.ts.net}
+      PROMPT_ENGINEER_AGENT_ID: ${PROMPT_ENGINEER_AGENT_ID:-prompt-engineer}
+      PROMPT_ENGINEER_MODEL: ${PROMPT_ENGINEER_MODEL:-openai/gpt-5.5}
+      DOCMOST_URL: ${DOCMOST_URL:-https://docmost.tiger-bushmaster.ts.net}
+      QUARTZ_URL: ${QUARTZ_URL:-https://quartz.tiger-bushmaster.ts.net}
+      SILVERBULLET_URL: ${SILVERBULLET_URL:-https://silverbullet.tiger-bushmaster.ts.net}
+    volumes:
+      - .:/app
+      - openclaw-portal-node-modules:/app/node_modules
+    restart: unless-stopped
+
+volumes:
+  tailscale-state:
+  openclaw-portal-node-modules:
