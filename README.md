@@ -43,7 +43,31 @@ docker compose up --build
 
 Source is bind-mounted; Vite HMR uses `wss` on client port `443` through Tailscale Serve.
 
-Coolify: map `TS_AUTHKEY={{project.TS_AUTHKEY}}` on the resource. Do not publish public ports.
+## Coolify Deployment
+
+Coolify injects secrets directly as environment variables into running containers and does not require `.env` files.
+
+### 1. Deployment via Docker Compose (Recommended with Tailscale sidecar)
+- Set build command / compose location to `docker-compose.prod.yml`.
+- Under Coolify **Environment Variables / Secrets**, define:
+
+| Variable | Description | Required / Default |
+|----------|-------------|-------------------|
+| `TS_AUTHKEY` | Tailscale auth key (`tskey-auth-...`) | **Required** |
+| `OPENCLAW_GATEWAY_TOKEN` | Auth token for OpenClaw Gateway | Optional (runs in mock mode if unset) |
+| `OPENCLAW_GATEWAY_URL` | OpenClaw Gateway WSS endpoint | `wss://openclaw.tiger-bushmaster.ts.net` |
+| `OPENCLAW_HTTP_URL` | OpenClaw HTTP base URL | `https://openclaw.tiger-bushmaster.ts.net` |
+| `PROMPT_ENGINEER_AGENT_ID` | Specialist agent ID | `prompt-engineer` |
+| `PROMPT_ENGINEER_MODEL` | Specialist model | `openai/gpt-5.5` |
+| `DOCMOST_URL` | Docmost URL | `https://docmost.tiger-bushmaster.ts.net` |
+| `QUARTZ_URL` | Quartz URL | `https://quartz.tiger-bushmaster.ts.net` |
+| `SILVERBULLET_URL` | SilverBullet URL | `https://silverbullet.tiger-bushmaster.ts.net` |
+
+### 2. Standalone Dockerfile Deployment
+If deploying without the Tailscale sidecar in Coolify:
+- Target stage: `production` (exposes port `8787`).
+- Define the environment variables listed above directly in Coolify.
+- Node BFF will log `[openclaw-portal] no .env file on disk — using environment variables from process` and read secrets directly from `process.env`.
 
 ## Routes
 

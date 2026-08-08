@@ -5,8 +5,7 @@ import { ensureTailnetNoProxy } from './tailnet.js'
 /** Load `.env` into process.env without overriding existing vars. */
 export function loadDotEnv(file = resolve(process.cwd(), '.env')) {
   if (!existsSync(file)) {
-    console.warn('[openclaw-portal] no .env found — OpenClaw chat will stay in mock mode')
-    console.warn('[openclaw-portal] run: ./scripts/sync-env-from-openclaw.sh')
+    console.log('[openclaw-portal] no .env file on disk — using environment variables from process')
     return { loaded: false as const, path: file }
   }
   const text = readFileSync(file, 'utf8')

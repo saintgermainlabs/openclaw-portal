@@ -49,6 +49,7 @@ services:
       OPENCLAW_HTTP_URL: ${OPENCLAW_HTTP_URL:-https://openclaw.tiger-bushmaster.ts.net}
       PROMPT_ENGINEER_AGENT_ID: ${PROMPT_ENGINEER_AGENT_ID:-prompt-engineer}
       PROMPT_ENGINEER_MODEL: ${PROMPT_ENGINEER_MODEL:-openai/gpt-5.5}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
       DOCMOST_URL: ${DOCMOST_URL:-https://docmost.tiger-bushmaster.ts.net}
       QUARTZ_URL: ${QUARTZ_URL:-https://quartz.tiger-bushmaster.ts.net}
       SILVERBULLET_URL: ${SILVERBULLET_URL:-https://silverbullet.tiger-bushmaster.ts.net}
