@@ -2,7 +2,26 @@ import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-import siteConfiguration from './.figma/make/site.json' with { type: 'json' }
+import { existsSync, readFileSync } from 'node:fs'
+
+function loadSiteConfiguration(): FigmaSiteConfiguration {
+  try {
+    const file = new URL('./.figma/make/site.json', import.meta.url)
+    if (existsSync(file)) {
+      return JSON.parse(readFileSync(file, 'utf-8'))
+    }
+  } catch {
+    /* fallback */
+  }
+  return {
+    title: 'OpenClaw Portal',
+    description: 'Chat with OpenClaw. Generators and connected apps render in the result pane.',
+    language: 'en',
+    robots: { index: false },
+  }
+}
+
+const siteConfiguration = loadSiteConfiguration()
 
 // Vite config — https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
