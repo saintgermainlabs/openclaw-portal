@@ -1,0 +1,190 @@
+{
+  "name": "prompt-generate",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "prompt-generate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "wh-prompt-generate",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "prompt-generate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nconst src = raw.body && typeof raw.body === 'object' ? raw.body : raw;\n\nconst brief = String(src.brief || '').trim();\nif (!brief) throw new Error('brief is required');\n\nconst target = String(src.target || 'generic').trim() || 'generic';\nconst title = String(src.title || '').trim();\nconst slug = String(src.slug || '').trim();\nconst model = String(src.model || 'openai/gpt-4o').trim();\nconst status = String(src.status || 'draft').trim();\n\nreturn [{\n  json: {\n    brief,\n    target,\n    title,\n    slug,\n    model,\n    status,\n    spaceId: '019fd6a5-7ed6-7ab0-ba42-d93755c420fc',\n    docmostBase: 'https://docmost.tiger-bushmaster.ts.net',\n    metamcpUrl: 'https://metamcp.tiger-bushmaster.ts.net/metamcp/openclaw/mcp',\n    openRouterBody: {\n      model,\n      temperature: 0.4,\n      messages: [\n        {\n          role: 'system',\n          content: [\n            'You are a specialist prompt-engineering agent.',\n            'Design prompts that reliably cause another AI agent to perform the intended task.',\n            '',\n            'Return ONLY:',\n            '1) One status line: target=<t> · slug=<slug> · v1 · status=draft',\n            '2) The full executable prompt in a single markdown fenced block.',\n            '',\n            'Prompt sections (skip empty): Goal, Context, Requirements, Constraints, Verification, Deliverables.',\n            `Target executor: ${target}.`,\n            \"Do not invent unrelated requirements. Goal is the work, not 'write a prompt'.\",\n          ].join('\\n'),\n        },\n        { role: 'user', content: brief },\n      ],\n    },\n  },\n}];"
+      },
+      "id": "code-normalize",
+      "name": "Normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "HTTP-Referer", "value": "https://openclaw-portal.tiger-bushmaster.ts.net" },
+            { "name": "X-Title", "value": "OpenClaw Prompt Generator" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.openRouterBody }}",
+        "options": {}
+      },
+      "id": "http-openrouter",
+      "name": "OpenRouter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "notes": "Header Auth: Name=Authorization Value=Bearer sk-or-..."
+    },
+    {
+      "parameters": {
+        "jsCode": "const norm = $('Normalize').first().json;\nconst or = $input.first().json;\nconst content = or?.choices?.[0]?.message?.content || '';\nif (!content) {\n  throw new Error('OpenRouter returned empty content: ' + JSON.stringify(or).slice(0, 500));\n}\n\nlet body = content;\nconst fence = content.match(/```(?:markdown)?\\n([\\s\\S]*?)```/);\nif (fence) body = fence[1].trim();\n\nconst statusLine = (content.split('\\n').find((l) => /target=/.test(l)) || '');\nconst slugFromLine = (statusLine.match(/slug=([a-z0-9-]+)/i) || [])[1];\nconst targetFromLine = (statusLine.match(/target=([a-z0-9-]+)/i) || [])[1];\n\nfunction kebab(s) {\n  return String(s || '')\n    .toLowerCase()\n    .replace(/[^a-z0-9]+/g, '-')\n    .replace(/^-+|-+$/g, '')\n    .slice(0, 64);\n}\n\nconst slug = norm.slug || slugFromLine || kebab(norm.title) || kebab(norm.brief).slice(0, 48) || `prompt-${Date.now()}`;\nconst target = norm.target || targetFromLine || 'generic';\nconst title = norm.title || slug;\nconst now = new Date().toISOString();\n\nconst pageMarkdown = [\n  '---',\n  `slug: ${slug}`,\n  `target: ${target}`,\n  `status: ${norm.status || 'draft'}`,\n  'version: 1',\n  `model: ${norm.model}`,\n  `created: ${now}`,\n  `updated: ${now}`,\n  `brief: ${JSON.stringify(norm.brief)}`,\n  'source: n8n/prompt-generate',\n  '---',\n  '',\n  body,\n].join('\\n');\n\nreturn [{\n  json: {\n    slug,\n    title,\n    target,\n    status: norm.status || 'draft',\n    version: 1,\n    model: norm.model,\n    body,\n    pageMarkdown,\n    spaceId: norm.spaceId,\n    docmostBase: norm.docmostBase,\n    metamcpUrl: norm.metamcpUrl,\n    mcpInitBody: {\n      jsonrpc: '2.0',\n      id: 1,\n      method: 'initialize',\n      params: {\n        protocolVersion: '2024-11-05',\n        capabilities: {},\n        clientInfo: { name: 'n8n-prompt-generate', version: '1.0.0' },\n      },\n    },\n    mcpCreateArgs: {\n      spaceId: norm.spaceId,\n      title,\n      content: pageMarkdown,\n      format: 'markdown',\n    },\n  },\n}];"
+      },
+      "id": "code-format",
+      "name": "Format Docmost Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.metamcpUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/json, text/event-stream" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.mcpInitBody }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "http-metamcp-init",
+      "name": "MetaMCP Initialize",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [940, 300],
+      "notes": "Header Auth: Name=X-API-Key Value=<METAMCP_API_KEY>  Endpoint must be /metamcp/openclaw/mcp"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fmt = $('Format Docmost Body').first().json;\nconst res = $input.first().json;\n\nconst headers = res.headers || res.header || {};\nconst lower = {};\nfor (const [k, v] of Object.entries(headers)) {\n  lower[String(k).toLowerCase()] = Array.isArray(v) ? v[0] : v;\n}\nconst sessionId = lower['mcp-session-id'] || lower['mcp_session_id'] || '';\nif (!sessionId) {\n  throw new Error('MetaMCP missing mcp-session-id. Check credential (X-API-Key) and URL /metamcp/openclaw/mcp. Response: ' + JSON.stringify(res).slice(0, 400));\n}\n\nreturn [{\n  json: {\n    ...fmt,\n    mcpSessionId: sessionId,\n    mcpCallBody: {\n      jsonrpc: '2.0',\n      id: 2,\n      method: 'tools/call',\n      params: {\n        name: 'docmost__create_page',\n        arguments: fmt.mcpCreateArgs,\n      },\n    },\n  },\n}];"
+      },
+      "id": "code-session",
+      "name": "Extract MCP Session",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1180, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.metamcpUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/json, text/event-stream" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "mcp-session-id", "value": "={{ $json.mcpSessionId }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.mcpCallBody }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "http-metamcp-create",
+      "name": "MetaMCP Create Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1420, 300],
+      "notes": "Same MetaMCP Header Auth (X-API-Key). Tool: docmost__create_page"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fmt = $('Extract MCP Session').first().json;\nconst res = $input.first().json;\nconst rawBody = typeof res.body === 'string' ? res.body : (res.body ? JSON.stringify(res.body) : JSON.stringify(res));\n\nlet parsed = null;\nconst dataMatch = String(rawBody).match(/data:\\s*(\\{[\\s\\S]*\\})/);\nif (dataMatch) {\n  try { parsed = JSON.parse(dataMatch[1]); } catch (_) {}\n}\nif (!parsed) {\n  try { parsed = typeof res.body === 'object' ? res.body : JSON.parse(String(rawBody)); } catch (_) {}\n}\n\nconst result = parsed?.result || parsed || {};\nconst err = parsed?.error;\nif (err) {\n  throw new Error('MetaMCP tools/call error: ' + JSON.stringify(err).slice(0, 500));\n}\n\n// MCP tool results often nest text JSON in content[]\nlet page = result;\nconst texts = (result.content || []).filter((c) => c.type === 'text').map((c) => c.text);\nfor (const t of texts) {\n  try {\n    const j = JSON.parse(t);\n    if (j && (j.id || j.pageId || j.slugId)) { page = j; break; }\n    if (j?.structuredContent) { page = j.structuredContent; break; }\n  } catch (_) {}\n}\nif (page.structuredContent) page = page.structuredContent;\n\nconst pageId = page.id || page.pageId || '';\nconst slugId = page.slugId || '';\nconst base = String(fmt.docmostBase || '').replace(/\\/$/, '');\nconst url = slugId ? `${base}/s/prompts/p/${slugId}` : `${base}/s/prompts`;\n\nreturn [{\n  json: {\n    ok: true,\n    slug: fmt.slug,\n    status: fmt.status,\n    version: fmt.version,\n    model: fmt.model,\n    target: fmt.target,\n    pageId,\n    slugId,\n    url,\n    body: fmt.body,\n  },\n}];"
+      },
+      "id": "code-response",
+      "name": "Build Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1660, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Normalize", "type": "main", "index": 0 }]]
+    },
+    "Normalize": {
+      "main": [[{ "node": "OpenRouter", "type": "main", "index": 0 }]]
+    },
+    "OpenRouter": {
+      "main": [[{ "node": "Format Docmost Body", "type": "main", "index": 0 }]]
+    },
+    "Format Docmost Body": {
+      "main": [[{ "node": "MetaMCP Initialize", "type": "main", "index": 0 }]]
+    },
+    "MetaMCP Initialize": {
+      "main": [[{ "node": "Extract MCP Session", "type": "main", "index": 0 }]]
+    },
+    "Extract MCP Session": {
+      "main": [[{ "node": "MetaMCP Create Page", "type": "main", "index": 0 }]]
+    },
+    "MetaMCP Create Page": {
+      "main": [[{ "node": "Build Response", "type": "main", "index": 0 }]]
+    },
+    "Build Response": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "transcripts": {
+    "/home/god/.cursor/projects/home-god-dev-project/agent-transcripts/29823023-125d-4bd4-8a2b-2aad2e1a2ba0/29823023-125d-4bd4-8a2b-2aad2e1a2ba0.jsonl": {
+      "mtimeMs": 1786235841096,
+      "size": 27872
+    },
+    "/home/god/.cursor/projects/home-god-dev-project/agent-transcripts/373158ac-ec16-422e-8fa2-0a21a848988b/373158ac-ec16-422e-8fa2-0a21a848988b.jsonl": {
+      "mtimeMs": 1786231988709,
+      "size": 28629
+    },
+    "/home/god/.cursor/projects/home-god-dev-project/agent-transcripts/55c427a8-8c3e-4772-879b-7c6193f8195b/55c427a8-8c3e-4772-879b-7c6193f8195b.jsonl": {
+      "mtimeMs": 1786175902983,
+      "size": 652943
+    },
+    "/home/god/.cursor/projects/home-god-dev-project/agent-transcripts/7656b062-cff4-45e8-8a41-fac9c56e75b2/7656b062-cff4-45e8-8a41-fac9c56e75b2.jsonl": {
+      "mtimeMs": 1786173374114,
+      "size": 32749
+    },
+    "/home/god/.cursor/projects/home-god-dev-project/agent-transcripts/a8d1b10a-0621-4b53-9d17-8e75e66dd692/a8d1b10a-0621-4b53-9d17-8e75e66dd692.jsonl": {
+      "mtimeMs": 1786095381216,
+      "size": 155701
+    },
+    "/home/god/.cursor/projects/home-god-dev-project/agent-transcripts/ec1478d3-93c5-4948-8838-44234e87869b/ec1478d3-93c5-4948-8838-44234e87869b.jsonl": {
+      "mtimeMs": 1786235869734,
+      "size": 225975
+    },
+    "/home/god/.cursor/projects/home-god-dev-project/agent-transcripts/ec1478d3-93c5-4948-8838-44234e87869b/subagents/33a8730a-40c9-4098-a62e-0de8a0f3b3f0.jsonl": {
+      "mtimeMs": 1786224542352,
+      "size": 18223
+    },
+    "/home/god/.cursor/projects/home-god-dev-project/agent-transcripts/ec1478d3-93c5-4948-8838-44234e87869b/subagents/78b2acdf-96e0-42cc-8097-928796220fd4.jsonl": {
+      "mtimeMs": 1786235830085,
+      "size": 6250
+    },
+    "/home/god/.cursor/projects/home-god-dev-project/agent-transcripts/ec1478d3-93c5-4948-8838-44234e87869b/subagents/83d8b3ee-6571-4a05-9e20-1ae612294612.jsonl": {
+      "mtimeMs": 1786235878979,
+      "size": 1740
+    },
+    "/home/god/.cursor/projects/home-god-dev-project/agent-transcripts/ee5a21f7-2115-4631-a128-2420d6bf5fb4/ee5a21f7-2115-4631-a128-2420d6bf5fb4.jsonl": {
+      "mtimeMs": 1786235937935,
+      "size": 227
+    }
+  }
+}

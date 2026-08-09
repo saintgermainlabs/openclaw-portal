@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "MetaMCP": {
+      "url": "https://metamcp.tiger-bushmaster.ts.net/metamcp/oc/mcp",
+      "headers": {
+        "Authorization": "Bearer ${env:METAMCP_API_KEY}"
+      }
+    }
+  }
+}

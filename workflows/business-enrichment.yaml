@@ -1,0 +1,167 @@
+apiVersion: openclaw.workflow/v1
+kind: Workflow
+metadata:
+  id: business-enrichment
+  title: Business enrichment (Facebook → Tripadvisor → Instagram)
+  status: draft
+  version: 2
+  owner: portal
+  tags: [business, facebook, tripadvisor, instagram, scrape, n8n, scraped_data]
+spec:
+  # Stage 1: scrape sources sequentially
+  # Stage 2: gather JSON → Docmost scraped_data page; images stay local (temp)
+  trigger:
+    type: webhook
+    path: /webhook/business-enrichment
+    base_url: https://n8n.tiger-bushmaster.ts.net
+
+  input:
+    required: [business_name]
+    properties:
+      business_name: { type: string }
+      facebook_url: { type: string }
+      tripadvisor_url: { type: string }
+      instagram_url: { type: string }
+      location: { type: string }
+      max_reviews: { type: integer, default: 50 }
+      max_photos: { type: integer, default: 30 }
+      slug: { type: string }
+
+  staging:
+    docmost:
+      page_title: scraped_data
+      # Prefer a dedicated space later; Prompts parent "workflows" / scraped_data for now
+      space_slug: prompts
+      format: markdown_with_json_fences
+      record_shape: |
+        One child page (or section) per business slug containing fenced JSON:
+        ```json
+        { "business": { ... }, "facebook": {}, "tripadvisor": {}, "instagram": {} }
+        ```
+    local_media:
+      root: data/scraped/{slug}/
+      images: data/scraped/{slug}/images/
+      # Temporary only — promote to object storage / Supabase later
+      retention: temporary
+
+  steps:
+    - id: resolve_targets
+      uses: n8n.code
+      with:
+        outputs: [facebook_url, tripadvisor_url, instagram_url, slug]
+
+    - id: facebook_business
+      uses: openclaw.skill/facebook-scraper
+      with:
+        # ClawHub skill is the agent interface; runnable code is facebook_page_scraper.
+        command: scrape --page-name {{ page_name }} --output json
+        runner: scripts/scrape-facebook-business.py
+        runner_args:
+          - --facebook-url
+          - "{{ resolve_targets.facebook_url }}"
+          - --business-name
+          - "{{ input.business_name }}"
+          - --slug
+          - "{{ resolve_targets.slug }}"
+        impl_path: ~/projects/tools/facebook_page_scraper
+        skill_path: ~/.openclaw/workspace/skills/facebook-scraper
+        input_from: resolve_targets.facebook_url
+        collect:
+          - display_name
+          - category
+          - about
+          - address
+          - phone
+          - website
+          - hours
+          - followers
+          - page_likes
+        local_json: data/scraped/{slug}/facebook.json
+      output:
+        json: facebook
+
+    - id: tripadvisor_reviews
+      uses: scraper.tripadvisor.reviews
+      with:
+        status: stub
+        input_from: resolve_targets.tripadvisor_url
+        max_from: input.max_reviews
+      output:
+        json: tripadvisor  # object { rating, review_count, reviews: [] }
+      depends_on: [facebook_business]
+
+    - id: instagram_photos
+      uses: scraper.instagram.photos
+      with:
+        status: stub
+        related_skill: facebook-image-download
+        input_from: resolve_targets.instagram_url
+        max_from: input.max_photos
+        download_to: data/scraped/{slug}/images/
+      output:
+        json: instagram  # object { profile, photos: [{ url, local_path }] }
+        # Binary files are NOT uploaded to Docmost in stage 2
+      depends_on: [tripadvisor_reviews]
+
+    - id: assemble_json
+      uses: n8n.code
+      with:
+        description: Merge scraper outputs into one JSON record (stage 2 gather)
+        schema:
+          slug: string
+          business_name: string
+          gathered_at: iso8601
+          sources: [facebook, tripadvisor, instagram]
+          facebook: object
+          tripadvisor: object
+          instagram:
+            profile: object
+            photos: [{ url: string, local_path: string }]
+          local_media_root: string
+      depends_on: [facebook_business, tripadvisor_reviews, instagram_photos]
+
+    - id: persist_scraped_data
+      uses: metamcp.tool
+      with:
+        endpoint: https://metamcp.tiger-bushmaster.ts.net/metamcp/openclaw/mcp
+        tool: docmost__create_page  # or update_page if slug exists
+        parent: scraped_data
+        title_from: assemble_json.slug
+        format: markdown
+        body_template: |
+          ---
+          slug: {{ slug }}
+          workflow: business-enrichment
+          stage: 2-gathered
+          gathered_at: {{ gathered_at }}
+          local_media: {{ local_media_root }}
+          ---
+
+          # {{ business_name }}
+
+          JSON record (source of truth for stage 2):
+
+          ```json
+          {{ full_record_json }}
+          ```
+      depends_on: [assemble_json]
+
+  output:
+    docmost: scraped_data/{slug}
+    local: data/scraped/{slug}/
+    response: [ok, slug, docmost_url, local_media_root, record]
+
+  principles:
+    - Stage 1 scrapes; stage 2 gathers — JSON objects are the interchange format
+    - All structured data lands on Docmost scraped_data (no Supabase yet)
+    - Images stay on local disk temporarily; only URLs + local_path refs in JSON
+    - Sequential: Facebook → Tripadvisor → Instagram
+    - No secrets in YAML
+
+  implementation_order:
+    - Create Docmost page scraped_data (catalog parent)
+    - Run scripts/scrape-facebook-business.py (facebook-scraper / facebook_page_scraper)
+    - Upload record JSON markdown under scraped_data
+    - Add tripadvisor_reviews scraper
+    - Add instagram_photos scraper + local download
+    - n8n webhook import
