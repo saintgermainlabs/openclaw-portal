@@ -16,7 +16,7 @@
 
 - This repo is the OpenClaw Portal: React two-pane UI with Vite HMR, Hono BFF, and a Tailscale Serve sidecar; public Tailnet host is `openclaw-portal.tiger-bushmaster.ts.net`.
 - OpenClaw gateway is on the same Tailnet (`openclaw.tiger-bushmaster.ts.net`); connected apps include Docmost, Quartz, and SilverBullet.
-- Prompt generation specialists live under `agents/prompt-engineer/` (and related agent workspaces); deploy helpers are in `scripts/`.
+- Prompt generation specialists live under `agents/prompt-engineer/` (and related agent workspaces); deploy helpers are in `scripts/`. The standalone multi-channel **prompt-generator-plugin** product lives at https://github.com/saintgermainlabs/prompt-generator-plugin (n8n webhook → OpenRouter → Docmost; Cursor/OpenClaw/Telegram/portal adapters).
 - n8n runs at `n8n.tiger-bushmaster.ts.net`; `n8n/workflows/prompt-generate` is Webhook → OpenRouter → Docmost Prompts space, with OpenRouter/Docmost credentials kept in n8n (not OpenClaw).
 - Portable workflow catalog lives under `workflows/` (`prompt-generate`, `website-research`, `business-enrichment`); local scrape artifacts stage under `data/scraped/`.
 - Coolify is the primary deploy/ops surface at `coolify.sg-labs.xyz` (Cloudflare Tunnel); BorgBackup covers files today, with Coolify Postgres the highest-priority DB backup target and a separate Medusa database also needing backup.

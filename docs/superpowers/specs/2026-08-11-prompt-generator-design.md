@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-11  
 **Status:** approved for implementation planning (revised: multi-channel standalone tool)  
-**Product repo:** standalone `prompt-generator` (not inside OpenClaw portal)
+**Product repo:** standalone [`prompt-generator-plugin`](https://github.com/saintgermainlabs/prompt-generator-plugin) (not inside OpenClaw portal)
 
 ## Summary
 
@@ -60,19 +60,21 @@ Website-creation is deferred. This tool has **no hard dependency** on website-cr
 ## Repository layout (v1)
 
 ```text
-prompt-generator/
+prompt-generator-plugin/
   README.md
   workflows/prompt-generate.yaml       # portable pipeline spec
   n8n/workflows/prompt-generate.json   # importable export
   n8n/README.md
   docs/api.md                          # webhook contract for all callers
   adapters/
-    cursor-plugin/                     # → ~/.cursor/plugins/local/prompt-generator
+    cursor-plugin/                     # → ~/.cursor/plugins/local/prompt-generator-plugin
     openclaw/                          # skill + thin agent (Telegram + gateway)
     portal/                            # notes / example BFF call for openclaw-portal
     hermes/                            # stub README for future adapter
   docs/
 ```
+
+**Canonical repo:** https://github.com/saintgermainlabs/prompt-generator-plugin
 
 ## Webhook contract (canonical API)
 
