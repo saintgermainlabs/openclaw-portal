@@ -45,6 +45,16 @@ const TOOLS = [
     portalAppId: 'dag-planner',
   },
   {
+    id: 'solfeggio-visualizer',
+    name: 'Solfeggio Frequency Visualizer',
+    description: 'Interactive sine wave visualizer and tone generator for nine sacred Solfeggio frequencies (3, 6, 9 digital roots).',
+    category: 'Visualization',
+    status: 'live',
+    complexity: 'Medium',
+    href: '/site/tools/solfeggio-frequencies',
+    portalAppId: 'solfeggio-visualizer',
+  },
+  {
     id: 'ritual-timer',
     name: 'Interval & Cycle Timer',
     description: 'Configurable interval timers for meditation, practice routines, and cyclic work patterns. Exports session logs.',
@@ -335,6 +345,13 @@ function ToolIcon({ id }: { id: string }) {
           <polygon key={i} points={`${x},${y-6} ${x+5.2},${y-3} ${x+5.2},${y+3} ${x},${y+6} ${x-5.2},${y+3} ${x-5.2},${y-3}`}
             stroke="var(--primary)" strokeWidth="0.6" fill="none" opacity={i === 0 ? 0.8 : 0.35} />
         ))}
+      </svg>
+    ),
+    'solfeggio-visualizer': (
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <path d="M4 20 Q 12 8, 20 20 T 36 20" stroke="var(--primary)" strokeWidth="1.2" fill="none" opacity="0.8" />
+        <path d="M4 20 Q 12 32, 20 20 T 36 20" stroke="var(--accent)" strokeWidth="0.8" fill="none" opacity="0.5" />
+        <circle cx="20" cy="20" r="3" fill="var(--accent)" opacity="0.9" />
       </svg>
     ),
     default: (

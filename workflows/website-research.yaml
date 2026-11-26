@@ -1,0 +1,37 @@
+apiVersion: openclaw.workflow/v1
+kind: Workflow
+metadata:
+  id: website-research
+  title: Website scrape then brief
+  status: draft
+  version: 1
+  owner: portal
+  tags: [website, scrape, research]
+spec:
+  trigger:
+    type: webhook
+    path: /webhook/website-research
+  input:
+    required: [url]
+    properties:
+      url: { type: string }
+      max_pages: { type: integer, default: 50 }
+  steps:
+    - id: crawl
+      uses: scraper.crawl
+      with:
+        start_from: input.url
+        max_pages_from: input.max_pages
+        collect: [title, text, links, meta]
+    - id: synthesize
+      uses: openrouter.chat
+      with:
+        model: openai/gpt-4o
+        role: research-brief
+    - id: persist
+      uses: metamcp.tool
+      with:
+        tool: docmost__create_page
+        space: prompts   # or a Websites space later
+  notes: >
+    Do not invent site content before crawl. Research-first is mandatory.

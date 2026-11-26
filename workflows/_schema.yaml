@@ -1,0 +1,34 @@
+apiVersion: openclaw.workflow/v1
+kind: Workflow
+metadata:
+  id: example-id              # kebab-case, unique
+  title: Human title
+  status: draft               # draft | iterating | ready | archived
+  version: 1
+  owner: portal
+  tags: []
+spec:
+  trigger:
+    type: webhook             # webhook | cron | manual | openclaw
+    path: /webhook/example    # if webhook
+    # cron: "0 10,20 * * *"   # if cron
+  input:
+    required: [brief]
+    properties:
+      brief: { type: string }
+      target: { type: string, default: generic }
+  steps:
+    - id: generate
+      uses: openrouter.chat
+      with:
+        model: openai/gpt-4o
+        # system/prompt refs — no API keys here
+    - id: persist
+      uses: metamcp.tool
+      with:
+        endpoint: https://metamcp.tiger-bushmaster.ts.net/metamcp/openclaw/mcp
+        tool: docmost__create_page
+        space: prompts
+  output:
+    docmost_space: prompts
+    fields: [slug, url, body]

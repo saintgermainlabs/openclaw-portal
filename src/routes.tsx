@@ -9,6 +9,7 @@ import SacredGeometryBuilder from './tools/SacredGeometryBuilder'
 import HexLatticeExplorer from './tools/HexLatticeExplorer'
 import FibonacciSpiralGenerator from './tools/FibonacciSpiralGenerator'
 import DagPlanner from './tools/DagPlanner'
+import SolfeggioFrequencyVisualizer from './tools/SolfeggioFrequencyVisualizer'
 import KnowledgeBase from './pages/KnowledgeBase'
 import NotFound from './pages/NotFound'
 
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
       { path: 'tools/hex-lattice', Component: HexLatticeExplorer },
       { path: 'tools/fibonacci-spiral', Component: FibonacciSpiralGenerator },
       { path: 'tools/dag-planner', Component: DagPlanner },
+      { path: 'tools/solfeggio-frequencies', Component: SolfeggioFrequencyVisualizer },
       { path: 'knowledge', Component: KnowledgeBase },
       { path: '*', Component: NotFound },
     ],

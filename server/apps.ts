@@ -8,7 +8,7 @@ export type AppDef = {
   /** Env var that holds the live URL for iframe/link apps */
   envKey?: string
   /** Native React view id when kind === 'native' */
-  view?: 'prompt-generator' | 'blog-generator' | 'home' | 'tools' | 'sacred-geometry' | 'hex-lattice' | 'fibonacci-spiral' | 'dag-planner' | 'knowledge' | 'blog'
+  view?: 'prompt-generator' | 'blog-generator' | 'home' | 'tools' | 'sacred-geometry' | 'hex-lattice' | 'fibonacci-spiral' | 'dag-planner' | 'solfeggio-visualizer' | 'knowledge' | 'blog'
 }
 
 export const APP_REGISTRY: AppDef[] = [
@@ -60,6 +60,13 @@ export const APP_REGISTRY: AppDef[] = [
     description: 'DAG Planner — dependency maps and system plans.',
     kind: 'native',
     view: 'dag-planner',
+  },
+  {
+    id: 'solfeggio-visualizer',
+    label: 'Solfeggio',
+    description: 'Solfeggio Frequency Visualizer — 9 sacred tones & digital roots.',
+    kind: 'native',
+    view: 'solfeggio-visualizer',
   },
   {
     id: 'knowledge',

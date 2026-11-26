@@ -6,6 +6,7 @@ import SacredGeometryBuilder from '@/tools/SacredGeometryBuilder'
 import HexLatticeExplorer from '@/tools/HexLatticeExplorer'
 import FibonacciSpiralGenerator from '@/tools/FibonacciSpiralGenerator'
 import DagPlanner from '@/tools/DagPlanner'
+import SolfeggioFrequencyVisualizer from '@/tools/SolfeggioFrequencyVisualizer'
 import Tools from '@/pages/Tools'
 import KnowledgeBase from '@/pages/KnowledgeBase'
 import Blog from '@/pages/Blog'
@@ -151,6 +152,12 @@ function AppSurface({ app }: { app: AppMeta }) {
       return (
         <div className="h-full overflow-y-auto">
           <DagPlanner compact embedded />
+        </div>
+      )
+    case 'solfeggio-visualizer':
+      return (
+        <div className="h-full overflow-y-auto">
+          <SolfeggioFrequencyVisualizer compact embedded />
         </div>
       )
     case 'tools':

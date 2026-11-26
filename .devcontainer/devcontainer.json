@@ -1,0 +1,59 @@
+{
+  "name": "OpenClaw Portal",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspaces/project",
+  "forwardPorts": [5173, 8787],
+  "portsAttributes": {
+    "5173": {
+      "label": "Vite UI",
+      "onAutoForward": "notify"
+    },
+    "8787": {
+      "label": "Hono BFF",
+      "onAutoForward": "silent"
+    }
+  },
+  "runArgs": [
+    "--dns", "100.100.100.100",
+    "--dns", "1.1.1.1"
+  ],
+  "postCreateCommand": "npm ci",
+  "postStartCommand": "bash -lc 'test -f .env || cp .env.example .env'",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "typescript.tsdk": "node_modules/typescript/lib"
+      }
+    },
+    "mcp": {
+      "servers": {
+        "MetaMCP": {
+          "url": "https://metamcp.tiger-bushmaster.ts.net/metamcp/oc/mcp",
+          "headers": {
+            "Authorization": "Bearer ${env:METAMCP_API_KEY}"
+          }
+        }
+      }
+    }
+  },
+  "containerEnv": {
+    "NODE_ENV": "development",
+    "PORT": "5173",
+    "API_PORT": "8787"
+  },
+  "remoteEnv": {
+    "METAMCP_API_KEY": "${localEnv:METAMCP_API_KEY}"
+  },
+  "remoteUser": "node"
+}
