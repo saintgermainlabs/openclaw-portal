@@ -5,6 +5,7 @@ import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { getGateway } from './openclaw.js'
 import { APP_REGISTRY, resolveAppUrl } from './apps.js'
+import { getInventorySnapshot } from './inventory.js'
 import { tailnetFetch, ensureTailnetNoProxy } from './tailnet.js'
 import {
   PROMPT_ENGINEER_AGENT_ID,
@@ -365,6 +366,8 @@ app.get('/api/diagnostics/tailnet', async (c) => {
     note: 'OpenClaw chat uses wss://… over Tailnet MagicDNS. Device pairing is separate from routing.',
   })
 })
+
+app.get('/api/inventory', async (c) => c.json(await getInventorySnapshot()))
 
 app.get('/api/apps', (c) => {
   return c.json({

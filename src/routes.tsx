@@ -10,12 +10,17 @@ import HexLatticeExplorer from './tools/HexLatticeExplorer'
 import FibonacciSpiralGenerator from './tools/FibonacciSpiralGenerator'
 import DagPlanner from './tools/DagPlanner'
 import KnowledgeBase from './pages/KnowledgeBase'
+import Inventory from './pages/Inventory'
 import NotFound from './pages/NotFound'
 
 export const router = createBrowserRouter([
   {
     path: '/',
     Component: PortalShell,
+  },
+  {
+    path: '/inventory',
+    Component: Inventory,
   },
   {
     path: '/site',
